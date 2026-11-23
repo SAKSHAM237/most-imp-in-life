@@ -20,14 +20,12 @@ function App() {
 
     setPlaying(true);
 
-    // Small delay to let the element mount, then play unmuted at full volume
     setTimeout(() => {
       const el = mediaRef.current;
       if (el) {
         el.muted = false;
         el.volume = 1.0;
         el.play().catch(() => {
-          // Autoplay with sound blocked by browser — try muted first, then unmute
           el.muted = true;
           el.play().then(() => {
             el.muted = false;
@@ -50,7 +48,6 @@ function App() {
     setPlaying(false);
   }, []);
 
-  // ---- Video fullscreen overlay ----
   if (playing && isVideo) {
     return (
       <div className="video-overlay">
@@ -70,7 +67,6 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Hidden audio element */}
       {playing && !isVideo && (
         <audio
           ref={mediaRef}
@@ -81,7 +77,9 @@ function App() {
       )}
 
       <button className="play-button" onClick={handlePlay}>
-        {buttonText}
+        <span className="play-icon">{isVideo ? '▶' : '🎧'}</span>
+        <span>{buttonText}</span>
+        {playing && <span className="playing-pulse" />}
       </button>
     </div>
   );

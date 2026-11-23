@@ -4,35 +4,94 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #ffffff;
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f7f9fa 100%);
   position: relative;
+  overflow: hidden;
 }
 
-/* ---- CTA Button ---- */
+/* Subtle background accent glow */
+.app-container::before {
+  content: "";
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(255, 122, 0, 0.12) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+  animation: pulse-glow 4s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 1; }
+}
+
+/* ---- Highly Appealing CTA Button ---- */
 .play-button {
-  padding: 18px 40px;
-  font-size: 1.15rem;
-  font-weight: 600;
+  position: relative;
+  padding: 20px 44px;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: #ffffff;
-  background: linear-gradient(135deg, #ff8c00, #ff6a00);
+  background: linear-gradient(135deg, #ff7a00 0%, #ff5100 50%, #e63900 100%);
   border: none;
-  border-radius: 50px;
+  border-radius: 9999px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(255, 106, 0, 0.4);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 30px -5px rgba(255, 85, 0, 0.45),
+              0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: button-float 3s ease-in-out infinite;
+}
+
+@keyframes button-float {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 10px 30px -5px rgba(255, 85, 0, 0.45);
+  }
+  50% {
+    transform: translateY(-5px);
+    box-shadow: 0 18px 36px -5px rgba(255, 85, 0, 0.55);
+  }
 }
 
 .play-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 28px rgba(255, 106, 0, 0.55);
+  transform: translateY(-7px) scale(1.03);
+  box-shadow: 0 20px 42px -6px rgba(255, 85, 0, 0.65),
+              0 0 25px rgba(255, 120, 0, 0.4);
 }
 
 .play-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 12px rgba(255, 106, 0, 0.35);
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 6px 18px -2px rgba(255, 85, 0, 0.45);
+}
+
+.play-icon {
+  font-size: 1.3rem;
+  transition: transform 0.3s ease;
+}
+
+.play-button:hover .play-icon {
+  transform: scale(1.2);
+}
+
+/* Playing state indicator */
+.playing-pulse {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  animation: live-indicator 1.2s infinite ease-in-out;
+}
+
+@keyframes live-indicator {
+  0%, 100% { transform: scale(0.8); opacity: 0.5; }
+  50% { transform: scale(1.3); opacity: 1; }
 }
 
 /* ---- Fullscreen Video Overlay ---- */
@@ -40,7 +99,7 @@
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: #000;
+  background: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,37 +113,42 @@
 
 .close-btn {
   position: fixed;
-  top: 16px;
-  right: 16px;
+  top: 20px;
+  right: 20px;
   z-index: 1001;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: #fff;
   font-size: 1.5rem;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.08);
 }
 
-/* ---- Audio Player (hidden, no extra UI needed) ---- */
+/* ---- Hidden Audio ---- */
 .audio-hidden {
   display: none;
 }
 
-/* ---- Responsive ---- */
+/* ---- Responsive for Mobile ---- */
 @media (max-width: 600px) {
   .play-button {
-    padding: 16px 32px;
-    font-size: 1rem;
+    padding: 18px 30px;
+    font-size: 1.05rem;
+    gap: 10px;
+    max-width: 90vw;
+    text-align: center;
+    justify-content: center;
   }
 }
