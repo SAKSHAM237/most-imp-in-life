@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { MEDIA_SRC, MEDIA_TYPE } from './mediaConfig';
 import './App.css';
 
@@ -11,6 +11,31 @@ function App() {
   const buttonText = isVideo
     ? 'Watch the most important thing in life'
     : 'Listen to the most important thing in life';
+
+  // Setup MediaSession API for OS lockscreen & background controls
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'The Most Important Thing in Life',
+        artist: 'Important Message',
+        album: 'Life Lessons',
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (mediaRef.current) {
+          mediaRef.current.play();
+          setPlaying(true);
+        }
+      });
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (mediaRef.current) {
+          mediaRef.current.pause();
+          setPlaying(false);
+        }
+      });
+    }
+  }, []);
 
   const handlePlay = useCallback(() => {
     if (!MEDIA_SRC) {
@@ -25,6 +50,12 @@ function App() {
       if (el) {
         el.muted = false;
         el.volume = 1.0;
+        
+        // Notify OS media session
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'playing';
+        }
+
         el.play().catch(() => {
           el.muted = true;
           el.play().then(() => {
@@ -41,10 +72,16 @@ function App() {
       el.pause();
       el.currentTime = 0;
     }
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'paused';
+    }
     setPlaying(false);
   }, []);
 
   const handleEnded = useCallback(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'none';
+    }
     setPlaying(false);
   }, []);
 
@@ -67,12 +104,30 @@ function App() {
 
   return (
     <div className="app-container">
-      {playing && !isVideo && (
+      {/* 
+        Always keep audio element mounted in DOM with preload="auto",
+        playsInline, and proper attributes so mobile browsers (Chrome / Safari / Firefox)
+        recognize it as system background media and keep playing when app is switched or screen locked.
+      */}
+      {!isVideo && (
         <audio
           ref={mediaRef}
-          src={MEDIA_SRC}
-          className="audio-hidden"
+          src={MEDIA_SRC || undefined}
+          preload="auto"
+          playsInline
           onEnded={handleEnded}
+          onPlay={() => {
+            setPlaying(true);
+            if ('mediaSession' in navigator) {
+              navigator.mediaSession.playbackState = 'playing';
+            }
+          }}
+          onPause={() => {
+            if ('mediaSession' in navigator) {
+              navigator.mediaSession.playbackState = 'paused';
+            }
+          }}
+          className="audio-hidden"
         />
       )}
 
