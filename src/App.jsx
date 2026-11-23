@@ -5,6 +5,7 @@ import './App.css';
 function App() {
   const [playing, setPlaying] = useState(false);
   const mediaRef = useRef(null);
+  const wakeLockRef = useRef(null);
 
   const isVideo = MEDIA_TYPE === 'video';
 
@@ -12,7 +13,34 @@ function App() {
     ? 'Watch the most important thing in life'
     : 'Listen to the most important thing in life';
 
-  // Setup MediaSession API for OS lockscreen & background controls
+  // Prevent accidental tab close while audio is playing
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (playing) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [playing]);
+
+  // Request screen/audio wake lock if supported
+  const requestWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator && !wakeLockRef.current) {
+        wakeLockRef.current = await navigator.wakeLock.request('screen');
+      }
+    } catch {
+      // WakeLock not critical if denied
+    }
+  };
+
+  // Setup MediaSession API for OS lockscreen & background audio controls
   useEffect(() => {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
@@ -44,6 +72,7 @@ function App() {
     }
 
     setPlaying(true);
+    requestWakeLock();
 
     setTimeout(() => {
       const el = mediaRef.current;
@@ -51,7 +80,6 @@ function App() {
         el.muted = false;
         el.volume = 1.0;
         
-        // Notify OS media session
         if ('mediaSession' in navigator) {
           navigator.mediaSession.playbackState = 'playing';
         }
@@ -75,12 +103,20 @@ function App() {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'paused';
     }
+    if (wakeLockRef.current) {
+      wakeLockRef.current.release().catch(() => {});
+      wakeLockRef.current = null;
+    }
     setPlaying(false);
   }, []);
 
   const handleEnded = useCallback(() => {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'none';
+    }
+    if (wakeLockRef.current) {
+      wakeLockRef.current.release().catch(() => {});
+      wakeLockRef.current = null;
     }
     setPlaying(false);
   }, []);
@@ -105,9 +141,8 @@ function App() {
   return (
     <div className="app-container">
       {/* 
-        Always keep audio element mounted in DOM with preload="auto",
-        playsInline, and proper attributes so mobile browsers (Chrome / Safari / Firefox)
-        recognize it as system background media and keep playing when app is switched or screen locked.
+        Persistent audio element with preload, playsInline & system media hooks.
+        Works across app switching, home button, and screen lock.
       */}
       {!isVideo && (
         <audio
